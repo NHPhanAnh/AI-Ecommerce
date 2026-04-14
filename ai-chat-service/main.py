@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
@@ -27,13 +27,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class ChatMessage(BaseModel):
+    role: str
+    text: str
+
 class ChatRequest(BaseModel):
     query: str
+    history: list[ChatMessage] = []
 
 class ChatResponse(BaseModel):
     response: str
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
-    answer = ai_engine.ask(request.query)
+    answer = ai_engine.ask(request.query, request.history)
     return ChatResponse(response=answer)
+
+@app.post("/api/refresh_kb")
+async def refresh_kb(background_tasks: BackgroundTasks):
+    background_tasks.add_task(ai_engine.initialize_kb)
+    return {"message": "Knowledge base refresh triggered in background"}

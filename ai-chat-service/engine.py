@@ -46,21 +46,26 @@ class AIEngine:
         else:
             print("CRITICAL WARNING: Không có tài liệu mẫu nào được nạp lên.")
 
-    def ask(self, query: str) -> str:
+    def ask(self, query: str, history: list = None) -> str:
         if not self.vector_store:
             return "❌ Hệ thống tri thức nội bộ chưa được tải dữ liệu, vui lòng báo quản trị viên."
         
+        hist_text = ""
+        if history:
+            for msg in history:
+                role = "USER" if msg.role == "user" else "AI"
+                hist_text += f"{role}: {msg.text}\n"
+
         # Thiết lập mô hình tìm kiếm Top 3 thông tin giống nhất
         retriever = self.vector_store.as_retriever(search_kwargs={"k": 3})
         
         # Template RAG (Nhồi kiến thức vào ngữ cảnh LLM)
         prompt = PromptTemplate.from_template(
-            "Bạn là trợ lý AI ảo nhiệt tình và rất chuyên nghiệp của hệ thống bán hàng 'Tech Store'. "
-            "Sức mạnh của bạn là hiểu rõ sản phẩm của cửa hàng. "
-            "Hãy sử dụng những thông tin sản phẩm có sẵn ở phần NGỮ CẢNH dưới đây để chắt lọc câu trả lời ngắn gọn, thân thiện và hữu ích nhất có thể. "
-            "Nếu bạn không thể trả lời dựa trên thông tin NGỮ CẢNH, hãy từ chối khéo.\n\n"
-            "NGỮ CẢNH:\n{context}\n\n"
-            "CÂU HỎI KHÁCH HÀNG: {input}\n\n"
+            "Bạn là trợ lý AI ảo nhiệt tình và rất chuyên nghiệp của hệ thống bán hàng 'Tech Store'.\n"
+            "Hãy sử dụng thông tin KHO HÀNG để trả lời rành mạch. Nếu câu hỏi liên quan đến nội dung cũ, hãy dựa vào LỊCH SỬ CHUYỆN TRÒ để hiểu ngữ cảnh (Ví dụ người dùng nói 'Tôi mua nó', bạn phải tự truy vết 'nó' là món nào ở trên).\n\n"
+            "--- LỊCH SỬ CHUYỆN TRÒ: ---\n{hist_text}\n"
+            "--- THÔNG TIN KHO HÀNG (NGỮ CẢNH): ---\n{context}\n\n"
+            "CÂU HỎI MỚI CỦA KHÁCH HÀNG: {input}\n\n"
             "TRẢ LỜI CỦA BẠN:"
         )
         
@@ -68,7 +73,7 @@ class AIEngine:
         retrieval_chain = create_retrieval_chain(retriever, document_chain)
         
         try:
-            response = retrieval_chain.invoke({"input": query})
+            response = retrieval_chain.invoke({"input": query, "hist_text": hist_text})
             return response["answer"]
         except Exception as e:
             return f"❌ Lỗi khi giao tiếp cùng AI Kernel: {str(e)}"

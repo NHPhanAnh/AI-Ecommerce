@@ -18,14 +18,11 @@
             </div>
             
             <div class="d-flex align-items-end mb-4">
-                <h2 class="text-danger fw-bold display-6 mb-0 me-3">{{ item.price|floatformat:0 }}đ</h2>
-                <h4 class="text-decoration-line-through text-muted mb-1">{{ item.original_price|floatformat:0 }}đ</h4>
+                <h2 class="text-danger fw-bold display-6 mb-0 me-3">{{ item.price|floatformat:"0g" }}đ</h2>
+                <h4 class="text-decoration-line-through text-muted mb-1">{{ item.original_price|floatformat:"0g" }}đ</h4>
             </div>
             
-            <div class="mb-4">
-                <h5 class="fw-bold">Thông số & Đặc điểm nổi bật:</h5>
-                <p class="fs-5 text-muted lh-lg">{{ item.description }}</p>
-            </div>
+
             
             <div class="d-flex gx-3 mt-auto">
                 <form action="{% url 'add_to_cart' %}" method="post" class="w-100 me-2">
@@ -39,6 +36,76 @@
                 <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-lg rounded-pill px-4">
                     Quay lại
                 </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chi Tiết & Thông Số Kỹ Thuật -->
+    <div class="row mt-5">
+        <div class="col-12 bg-white rounded-4 shadow-sm p-4 px-md-5 border">
+            <!-- Đặc điểm nổi bật -->
+            <h4 class="fw-bold mb-4 text-dark border-bottom border-3 border-primary pb-2 d-inline-block">Đặc điểm nổi bật</h4>
+            <div class="lh-lg text-dark mb-5" style="color: #444;">
+                <h5 class="fw-bold mb-3">{{ item.name }}: Trải nghiệm đột phá</h5>
+                <p>{{ item.description }}</p>
+                <p>
+                    Sản phẩm <strong>{{ item.name }}</strong> là sự lựa chọn hoàn hảo dành cho những khách hàng đang tìm kiếm một thiết bị hiện đại, mang lại sự cân bằng hoàn hảo giữa thiết kế và hiệu năng ổn định. 
+                    Với cấu hình được tối ưu vượt trội, đây là người bạn đồng hành đáng tin cậy, sẵn sàng cùng bạn chinh phục mọi thử thách trong học tập, công việc và giải trí!
+                </p>
+                <h6 class="fw-bold mt-4">Thiết kế chuyên nghiệp, bền bỉ vượt thời gian</h6>
+                <p>Sở hữu một vẻ ngoài tinh tế và chuyên nghiệp với tông màu sang trọng cùng lớp vỏ có bề mặt nhám. Lối thiết kế này không chỉ mang lại cảm giác cao cấp mà còn giúp chống bám vân tay hiệu quả, giữ cho máy luôn sạch sẽ. Với trọng lượng mỏng nhẹ ấn tượng, thiết bị này cực kỳ di động, cho phép bạn dễ dàng mang theo bên mình.</p>
+                
+                <h6 class="fw-bold mt-4">Màn hình sắc nét, tối ưu cho năng suất</h6>
+                <p>Được trang bị tấm nền cao cấp mang lại hình ảnh sắc nét và rực rỡ đến từng chi tiết. Cung cấp thêm không gian hiển thị rộng rãi, kết hợp với cường độ sáng tinh chỉnh thông minh kèm lớp phủ chống chói (Anti-Glare), đảm bảo bạn có thể sử dụng thoải mái trong nhiều môi trường ánh sáng phức tạp mà không gây mỏi mắt.</p>
+                
+                <h6 class="fw-bold mt-4">Nâng cấp linh hoạt, Đầu tư cho tương lai</h6>
+                <p>Một trong những ưu điểm vượt trội trên <strong>{{ item.name }}</strong> là khả năng đa nhiệm và kết nối mở rộng đỉnh cao, điều hiếm thấy trên các dòng sản phẩm cùng phân khúc. Điều này biến nó thành một khoản đầu tư linh hoạt và vô cùng vững chắc cho tương lai lâu dài.</p>
+            </div>
+
+            <!-- Thông số kỹ thuật -->
+            <h4 class="fw-bold mb-4 text-dark border-bottom border-3 border-danger pb-2 d-inline-block">Thông số kỹ thuật</h4>
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered table-hover mt-3 fs-6">
+                    <tbody>
+                        <tr>
+                            <th scope="row" class="w-25 bg-light fw-bold">Tên sản phẩm</th>
+                            <td>{{ item.name }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="bg-light fw-bold">Giá Niêm Yết Gốc</th>
+                            <td>{{ item.original_price|floatformat:"0g" }} VNĐ</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="bg-light fw-bold">Danh mục</th>
+                            <td>{{ item.category }}</td>
+                        </tr>
+                        
+                        {% if "Laptop" in item.category or "Máy tính" in item.category %}
+                        <tr><th scope="row" class="bg-light fw-bold">Vi xử lý (CPU)</th><td>Intel® Core™ thế hệ mới / AMD Ryzen Series tối ưu hiệu năng</td></tr>
+                        <tr><th scope="row" class="bg-light fw-bold">Dung lượng RAM</th><td>8GB / 16GB / 32GB LPDDR5 tốc độ cao (Có khả năng nâng cấp)</td></tr>
+                        <tr><th scope="row" class="bg-light fw-bold">Ổ cứng lưu trữ</th><td>512GB / 1TB SSD NVMe PCIe mượt mà</td></tr>
+                        <tr><th scope="row" class="bg-light fw-bold">Màn hình hiển thị</th><td>14" - 15.6" phân giải FHD+ (1920x1200) / 2K, tỉ lệ 16:10 Tấm nền IPS</td></tr>
+                        <tr><th scope="row" class="bg-light fw-bold">Card Đồ hoạ (VGA)</th><td>Intel Iris Xe Graphics / NVIDIA® RTX / AMD Radeon</td></tr>
+                        <tr><th scope="row" class="bg-light fw-bold">Kết nối & Pin</th><td>Wi-Fi 6E, Bluetooth 5.2 | Pin 54Whr - 70Whr sử dụng dài lâu</td></tr>
+                        <tr><th scope="row" class="bg-light fw-bold">Hệ điều hành</th><td>Windows 11 Home Bản quyền</td></tr>
+                        
+                        {% elif "Điện thoại" in item.category or "Máy tính bảng" in item.category %}
+                        <tr><th scope="row" class="bg-light fw-bold">Vi xử lý (Chipset)</th><td>Chipset 8 nhân đầu bảng (Snapdragon / Apple Bionic)</td></tr>
+                        <tr><th scope="row" class="bg-light fw-bold">RAM & Trữ Lượng</th><td>8GB - 12GB RAM, 256GB - 512GB Bộ nhớ trong (ROM)</td></tr>
+                        <tr><th scope="row" class="bg-light fw-bold">Màn hình</th><td>6.1" - 6.8" Super AMOLED / OLED, Tần số quét 120Hz mượt mà</td></tr>
+                        <tr><th scope="row" class="bg-light fw-bold">Camera chính</th><td>Camera Chính 48MP - 200MP chống rung OIS, Siêu rộng, Tele zoom</td></tr>
+                        <tr><th scope="row" class="bg-light fw-bold">Camera Selfie</th><td>12MP - 32MP tự động lấy nét, hỗ trợ làm đẹp AI</td></tr>
+                        <tr><th scope="row" class="bg-light fw-bold">Dung lượng pin</th><td>4500 mAh - 5000 mAh, Hỗ trợ Sạc Nhanh 45W - 65W</td></tr>
+                        
+                        {% else %}
+                        <tr><th scope="row" class="bg-light fw-bold">Thương hiệu</th><td>Hàng Chính Hãng Phân Phối Trực Tiếp</td></tr>
+                        <tr><th scope="row" class="bg-light fw-bold">Chất liệu cấu thành</th><td>Hợp kim nhôm nguyên khối / Nhựa ABS cao cấp thân thiện</td></tr>
+                        <tr><th scope="row" class="bg-light fw-bold">Chính sách bảo hành</th><td>12 Tháng - Cam kết 1 đổi 1 trong 30 ngày đầu tiên nếu do lỗi NSX</td></tr>
+                        <tr><th scope="row" class="bg-light fw-bold">Kết nối tích hợp</th><td>Bluetooth 5.0+ / Dây cáp USB Type-C hiện đại</td></tr>
+                        <tr><th scope="row" class="bg-light fw-bold">Tính năng chuyên môn</th><td>{{ item.description|truncatewords:20 }}</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

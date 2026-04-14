@@ -46,9 +46,9 @@
                 <h5 class="card-title fw-bold text-dark mb-3" style="font-size: 1.1rem; line-height: 1.4;">{{ item.name|truncatechars:45 }}</h5>
                 
                 <div class="d-flex align-items-end mb-3 mt-auto">
-                    <h4 class="card-subtitle text-danger fw-bold mb-0 me-2">{{ item.price|floatformat:0 }}đ</h4>
+                    <h4 class="card-subtitle text-danger fw-bold mb-0 me-2">{{ item.price|floatformat:"0g" }}đ</h4>
                     {% if item.discount_percent > 0 %}
-                    <span class="text-decoration-line-through text-muted" style="font-size: 0.9rem;">{{ item.original_price|floatformat:0 }}đ</span>
+                    <span class="text-decoration-line-through text-muted" style="font-size: 0.9rem;">{{ item.original_price|floatformat:"0g" }}đ</span>
                     {% endif %}
                 </div>
                 

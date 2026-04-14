@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow border-0">
+            <div class="card-header bg-dark text-white pt-3 pb-2 text-center">
+                <h4 class="fw-bold">Hồ Sơ Nhân Viên</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="{% url 'profile' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label text-muted fw-bold">Tên đăng nhập (Staff ID)</label>
+                        <input type="text" class="form-control" value="{{ user.username }}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted fw-bold">Email</label>
+                        <input type="email" name="email" class="form-control" value="{{ user.email }}">
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted fw-bold">Họ</label>
+                            <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted fw-bold">Tên</label>
+                            <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}">
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <label class="form-label text-muted fw-bold">Đổi mật khẩu mới (Bỏ trống nếu không đổi)</label>
+                            <input type="password" name="new_password" class="form-control" placeholder="*********">
+                        </div>
+                    </div>
+                    <div class="text-end border-top pt-3">
+                        <a href="{% url 'manager_home' %}" class="btn btn-secondary me-2">Nhấn để hủy</a>
+                        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

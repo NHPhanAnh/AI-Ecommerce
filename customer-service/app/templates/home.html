@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Trang chủ Tech Store{% endblock %}
+{% block content %}
+<div class="p-5 mb-5 rounded-4 shadow-sm" style="background: linear-gradient(135deg, #0d6efd, #0dcaf0); color: white;">
+    <div class="row align-items-center">
+        <div class="col-md-7">
+            <h1 class="display-4 fw-bold mb-3">Chào mừng đến với Tech Store</h1>
+            <p class="lead mb-4">Nơi cung cấp các thiết bị công nghệ hàng đầu với giá cả trọn vẹn và ưu đãi bất tận. Trải nghiệm ngay sản phẩm công nghệ thế hệ mới.</p>
+            
+            <form action="{% url 'home' %}" method="get" class="d-flex" style="max-width: 500px;">
+                <input type="text" name="q" class="form-control form-control-lg me-2 border-0 shadow-sm" placeholder="Tìm kiếm sản phẩm..." value="{{ query }}">
+                <button type="submit" class="btn btn-warning btn-lg fw-bold shadow-sm px-4">Tìm kiếm</button>
+            </form>
+        </div>
+        <div class="col-md-5 text-center d-none d-md-block">
+            <div style="font-size: 8rem; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2));">🚀</div>
+        </div>
+    </div>
+</div>
+
+{% for category, products in grouped_products.items %}
+    {% if products %}
+    <div class="d-flex justify-content-between align-items-center mb-4 mt-5">
+        <h2 class="fw-bold mb-0 text-dark border-start border-4 border-primary ps-3">{{ category }}</h2>
+        <a href="{% url 'view_all_products' category %}" class="btn btn-outline-primary rounded-pill px-4 fw-medium">Xem tất cả ➔</a>
+    </div>
+
+    <div class="horizontal-scroll px-1">
+        {% for item in products %}
+        <div class="card h-100 position-relative">
+            <div class="position-absolute top-0 end-0 p-2 z-1">
+                <span class="badge bg-danger rounded-pill fw-bold shadow-sm px-2 py-1">
+                    Giảm {{ item.discount_percent|floatformat:0 }}%
+                </span>
+            </div>
+            
+            <div class="card-img-top bg-white d-flex align-items-center justify-content-center p-4 border-bottom" style="height: 200px;">
+                {% if item.image_url %}
+                    <img src="{{ item.image_url }}" alt="{{ item.name }}" class="img-fluid" style="max-height: 150px; object-fit: contain;">
+                {% else %}
+                    <div style="font-size: 6rem;">📦</div>
+                {% endif %}
+            </div>
+            
+            <div class="card-body d-flex flex-column p-4">
+                <h5 class="card-title fw-bold text-dark mb-3" style="font-size: 1.1rem; line-height: 1.4;">{{ item.name|truncatechars:45 }}</h5>
+                
+                <div class="d-flex align-items-end mb-3 mt-auto">
+                    <h4 class="card-subtitle text-danger fw-bold mb-0 me-2">{{ item.price|floatformat:0 }}đ</h4>
+                    {% if item.discount_percent > 0 %}
+                    <span class="text-decoration-line-through text-muted" style="font-size: 0.9rem;">{{ item.original_price|floatformat:0 }}đ</span>
+                    {% endif %}
+                </div>
+                
+                <p class="card-text text-muted small d-flex align-items-center mb-4">
+                    <span class="badge bg-light text-dark border me-2">📦 Kho: {{ item.stock }}</span>
+                    <span><i class="bi bi-shield-check text-success"></i> Chính hãng 100%</span>
+                </p>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'product_detail' item.id %}" class="btn btn-outline-primary fw-medium flex-grow-1" style="border-radius: 8px;">Chi tiết</a>
+                    <!-- Form thêm vào giỏ hàng -->
+                    <form action="{% url 'add_to_cart' %}" method="post" class="flex-grow-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="item_id" value="{{ item.id }}">
+                        <input type="hidden" name="item_type" value="product">
+                        <button type="submit" class="btn btn-primary w-100 fw-medium shadow-sm" style="border-radius: 8px;" {% if item.stock <= 0 %}disabled{% endif %}>
+                            Thêm vào giỏ
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% empty %}
+    <div class="alert alert-info py-5 text-center mt-5 rounded-4 shadow-sm">
+        <h4 class="fw-bold mb-3">Không tìm thấy sản phẩm nào!</h4>
+        <p class="text-muted">Vui lòng thử tìm kiếm bằng từ khóa khác hoặc quay lại trang chủ.</p>
+        <a href="{% url 'home' %}" class="btn btn-primary mt-3 px-4 rounded-pill">Về trang chủ</a>
+    </div>
+{% endfor %}
+{% endblock %}

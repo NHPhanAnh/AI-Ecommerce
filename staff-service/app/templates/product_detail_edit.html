@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-header bg-white border-bottom border-light p-4">
+                <h3 class="mb-0 fw-bold text-dark">Chỉnh sửa/Thông tin Sản phẩm</h3>
+            </div>
+            <div class="card-body p-5">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update">
+                    
+                    
+                    <div class="row">
+                        <div class="col-md-9">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">ID Sản Phẩm (Chỉ xem)</label>
+                                <input type="text" class="form-control bg-light" value="{{ item.id }}" disabled>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-danger">Danh Mục Ngành Hàng</label>
+                                <input type="text" name="category" class="form-control text-uppercase fw-bold text-danger" value="{{ item.category }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-center justify-content-center">
+                            {% if item.image_url %}
+                                <img src="{{ item.image_url }}" alt="Preview" class="img-thumbnail" style="max-height: 120px;">
+                            {% else %}
+                                <div class="bg-light border rounded text-center d-flex align-items-center justify-content-center text-muted" style="width: 120px; height: 120px; font-size: 3rem;">
+                                    {% if item_type == 'laptop' %}💻{% else %}📱{% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-danger">Mã Loại (Phân Loại)</label>
+                        <input type="text" class="form-control bg-light text-uppercase fw-bold text-danger" value="{{ item_type }}" disabled>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên Sản Phẩm*</label>
+                        <input type="text" class="form-control" name="name" value="{{ item.name }}" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Giá Gốc ($)*</label>
+                            <input type="number" step="0.01" class="form-control" name="price" value="{{ item.price }}" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Giảm Giá (%)*</label>
+                            <input type="number" min="0" max="100" class="form-control" name="discount_percent" value="{{ item.discount_percent }}" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Kho (Stock)*</label>
+                            <input type="number" min="0" class="form-control" name="stock" value="{{ item.stock }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mô Tả / Đặc Điểm (Tùy chọn)</label>
+                        <textarea class="form-control" name="description" rows="5">{{ item.description }}</textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Link Ảnh URL</label>
+                        <input type="url" name="image_url" class="form-control" value="{{ item.image_url|default:'' }}">
+                    </div>
+                    
+                    <div class="d-flex justify-content-between pt-3 border-top">
+                        <a href="{% url 'manager_home' %}" class="btn btn-outline-secondary px-4">Quay lại</a>
+                        <div>
+                            <button type="submit" class="btn btn-primary px-4 fw-bold me-2">Lưu Thay Đổi</button>
+                            <!-- Delete button triggering a modal -->
+                            <button type="button" class="btn btn-danger px-4" data-bs-toggle="modal" data-bs-target="#deleteModal">Xóa Sản Phẩm</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 rounded-4 shadow">
+      <div class="modal-header bg-danger text-white border-0">
+        <h5 class="modal-title fw-bold">Xác nhận Xóa</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body py-4">
+        Bạn có chắc chắn muốn xóa sản phẩm <strong>{{ item.name }}</strong> vĩnh viễn không? Điều này không thể hoàn tác.
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete">
+            <button type="submit" class="btn btn-danger">Xóa Vĩnh Viễn</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

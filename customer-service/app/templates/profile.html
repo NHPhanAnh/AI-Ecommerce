@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-header bg-primary text-white pt-4 pb-3 rounded-top-4">
+                <h3 class="fw-bold mb-0 text-center">Hồ Sơ Của Bạn</h3>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="{% url 'profile' %}">
+                    {% csrf_token %}
+                    
+                    <h5 class="text-primary border-bottom pb-2 mb-3">Thông tin tài khoản</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Tên đăng nhập</label>
+                            <input type="text" class="form-control" value="{{ user.username }}" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Email</label>
+                            <input type="email" name="email" class="form-control" value="{{ user.email }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Họ</label>
+                            <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Tên</label>
+                            <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}">
+                        </div>
+                    </div>
+                    
+                    <h5 class="text-primary border-bottom pb-2 mt-4 mb-3">Thông tin liên hệ</h5>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label text-muted small fw-bold">Số điện thoại</label>
+                            <input type="text" name="phone" class="form-control" value="{{ customer.phone|default_if_none:'' }}">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label text-muted small fw-bold">Địa chỉ</label>
+                            <textarea name="address" class="form-control" rows="3">{{ customer.address|default_if_none:'' }}</textarea>
+                        </div>
+                    </div>
+                    
+                    <h5 class="text-primary border-bottom pb-2 mt-4 mb-3">Đổi mật khẩu</h5>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label text-muted small fw-bold">Mật khẩu mới (Bỏ trống nếu không đổi)</label>
+                            <input type="password" name="new_password" class="form-control" placeholder="Nhập mật khẩu mới...">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 pt-3 border-top text-end">
+                        <a href="{% url 'home' %}" class="btn btn-outline-secondary me-2 rounded-pill shadow-sm">Thoát</a>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">Cập nhật thông tin</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

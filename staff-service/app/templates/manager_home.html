@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-8">
+        <h2>Quản lý Kho Hàng (Tất cả Sản phẩm)</h2>
+        <p class="text-muted">Trung tâm kiểm soát hàng hóa và các chiến dịch giảm giá</p>
+    </div>
+    <div class="col-4 text-end d-flex align-items-center justify-content-end">
+        <a href="{% url 'add_item' %}" class="btn btn-success me-2">
+            <i class="bi bi-plus-lg"></i> Thêm Hàng Mới
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0 align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="px-4 py-3">Danh Mục</th>
+                        <th class="py-3">Tên Sản Phẩm</th>
+                        <th class="py-3">Giá ($)</th>
+                        <th class="py-3">Kho</th>
+                        <th class="py-3">Giảm Giá</th>
+                        <th class="px-4 py-3 text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in products %}
+                    <tr>
+                        <td class="px-4"><span class="badge bg-primary">{{ item.category }}</span></td>
+                        <td class="fw-medium">{{ item.name }}</td>
+                        <td class="text-danger fw-bold">{{ item.price }}đ</td>
+                        <td>
+                            {% if item.stock > 0 %}
+                                <span class="badge bg-success text-white">Còn {{ item.stock }}</span>
+                            {% else %}
+                                <span class="badge bg-danger">Hết hàng</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.discount_percent > 0 %}
+                                <span class="badge bg-warning text-dark">-{{ item.discount_percent|floatformat:0 }}%</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 text-end">
+                            <a href="{% url 'product_detail_edit' item.id %}" class="btn btn-sm btn-outline-primary">Tùy chỉnh</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+                            Chưa có sản phẩm nào trong kho.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

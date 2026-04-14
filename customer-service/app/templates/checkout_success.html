@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 text-center">
+        <div class="card shadow border-0 rounded-4 p-5">
+            <div class="text-success mb-4" style="font-size: 5rem;">
+                ✅
+            </div>
+            <h1 class="display-6 fw-bold text-success mb-3">Thanh Toán Thành Công!</h1>
+            <p class="fs-5 text-muted mb-4">Cảm ơn bạn đã tin tưởng và mua sắm tại <strong>Tech Store</strong>. Đơn hàng của bạn đang được xử lý.</p>
+            <a href="{% url 'home' %}" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm">Về Trang Chủ</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

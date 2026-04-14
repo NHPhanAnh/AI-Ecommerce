@@ -1,7 +1,7 @@
 import os
 import requests
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from langchain_core.documents import Document
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -17,7 +17,7 @@ class AIEngine:
             print("WARNING: GOOGLE_API_KEY is missing!")
 
         # Model Embeddings (Chuyển hoá text thành các Vector toán học)
-        self.embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        self.embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
         # Model LLM để đàm thoại
         self.llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.3)
         self.vector_store = None

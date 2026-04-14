@@ -105,6 +105,8 @@ services:
       context: ./ai-chat-service
       dockerfile: Dockerfile
     container_name: kiemtra-ai-chat
+    volumes:
+      - ./ai-chat-service:/app
     ports:
       - "8005:8005"
     environment:

@@ -1,5 +1,7 @@
 import os
 import random
+import re
+import unicodedata
 import requests
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_core.prompts import PromptTemplate
@@ -9,6 +11,14 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_community.vectorstores import Chroma
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+def normalize(text: str) -> str:
+    """Chuyen tieng Viet co dau -> khong dau, lowercase, de so sanh."""
+    text = text.lower()
+    # NFD: tach diacritic, filter non-ASCII -> ghep lai
+    nfd = unicodedata.normalize('NFD', text)
+    ascii_text = ''.join(c for c in nfd if unicodedata.category(c) != 'Mn')
+    return ascii_text
 
 try:
     from lstm_recommender import LSTMRecommender
@@ -56,7 +66,7 @@ class AIEngine:
             except Exception as e:
                 print(f"[AIEngine] LSTM init error: {e}")
 
-        # Khởi tạo Gemini (nếu có Key)
+        # Khởi tạo Gemini (nếu có Key) - chỉ dùng cho Embeddings
         if self.google_api_key:
             try:
                 self.embeddings = GoogleGenerativeAIEmbeddings(
@@ -112,17 +122,20 @@ class AIEngine:
 
         print(f"[AIEngine] Nhúng {len(docs)} sản phẩm vào VectorDB...")
 
-        # Thử dùng Gemini Embeddings trước
+        # Thử Gemini Embeddings — nếu lỗi (404/429/rate limit) chuyển ngay sang Dummy
         if self.use_gemini:
             try:
                 self.vector_store = Chroma.from_documents(
                     docs, self.embeddings, persist_directory="./chroma_db_store"
                 )
-                print("[AIEngine] VectorDB (Gemini Embeddings) sẵn sàng!")
+                print("[AIEngine] VectorDB (Gemini) OK!")
                 return
             except Exception as e:
-                print(f"[AIEngine] Gemini embedding lỗi: {e}")
-                print("[AIEngine] Chuyển sang DummyEmbeddings + LSTM-only mode.")
+                err_str = str(e)
+                if "429" in err_str or "quota" in err_str.lower() or "404" in err_str:
+                    print(f"[AIEngine] Gemini quota/API lỗi — chuyển LSTM-only mode (lỗi: {err_str[:80]})")
+                else:
+                    print(f"[AIEngine] Gemini embedding lỗi: {err_str[:120]}")
                 self.use_gemini = False
                 self.llm = None
 
@@ -144,22 +157,31 @@ class AIEngine:
 
         # ---- LSTM Recommendation ----
         lstm_text = ""
-        q_lower = query.lower()
-        lstm_keywords = ["đề xuất", "gợi ý", "mua gì", "giới thiệu",
-                         "recommend", "nên mua", "phù hợp", "tầm giá"]
-        if any(k in q_lower for k in lstm_keywords) and self.recommender:
+        q_norm = normalize(query)
+        lstm_keywords = ["de xuat", "goi y", "mua gi", "gioi thieu",
+                         "recommend", "nen mua", "phu hop", "tam gia"]
+        if any(k in q_norm for k in lstm_keywords) and self.recommender:
             try:
-                # Dùng session giả lập (trong thực tế lấy từ cookie/session user)
                 dummy_session = [random.randint(1, 50) for _ in range(5)]
                 lstm_text = self.recommender.get_recommendation_text(dummy_session)
             except Exception as e:
                 lstm_text = f"\n\n🤖 [LSTM] Lỗi phân tích: {e}"
 
-        # ---- Nếu Gemini hoạt động → RAG đầy đủ ----
+        # Luôn ưu tiên Rule-based (nhanh, không cần Google)
+        # Chỉ dùng Gemini RAG nếu use_gemini=True VÀ vector_store có Gemini embeddings
         if self.use_gemini and self.llm and self.vector_store:
-            return self._ask_with_rag(query, history, lstm_text)
+            try:
+                return self._ask_with_rag(query, history, lstm_text)
+            except Exception as e:
+                err = str(e)
+                if "429" in err or "quota" in err.lower():
+                    print(f"[AI] Gemini 429 quota — fallback rule-based")
+                    self.use_gemini = False
+                    self.llm = None
+                else:
+                    return f"❌ Lỗi AI: {e}" + lstm_text
 
-        # ---- Fallback: Rule-based từ danh sách sản phẩm + LSTM ----
+        # Rule-based (không cần Google)
         return self._ask_rule_based(query, lstm_text)
 
     def _ask_with_rag(self, query: str, history: list, lstm_text: str) -> str:
@@ -190,67 +212,63 @@ class AIEngine:
 
     def _ask_rule_based(self, query: str, lstm_text: str) -> str:
         """
-        Chat không cần Gemini — dùng keyword matching trên danh sách sản phẩm thật.
-        Tự trả lời dựa trên dữ liệu sản phẩm có sẵn.
+        Chat không cần Gemini — keyword matching thông minh (có dấu lẫn không dấu).
         """
-        q = query.lower()
+        q_norm = normalize(query)   # query không dấu, lower
         matched = []
 
-        # Tìm sản phẩm theo từ khóa trong câu hỏi
         for p in self.products:
-            name = (p.get("name") or "").lower()
-            cat  = (p.get("category") or "").lower()
-            desc = (p.get("description") or "").lower()
-            # So khớp từ trong query với tên/danh mục/mô tả sản phẩm
-            words = [w for w in q.split() if len(w) > 2]
-            if any(w in name or w in cat or w in desc for w in words):
+            name = normalize(p.get('name') or '')
+            cat  = normalize(p.get('category') or '')
+            desc = normalize(p.get('description') or '')
+            combined = f"{name} {cat} {desc}"
+            words = [w for w in q_norm.split() if len(w) > 2]
+            if any(w in combined for w in words):
                 matched.append(p)
 
         # Lọc theo giá nếu có đề cập ngân sách
         price_limit = None
-        price_words = {"triệu": 1_000_000, "tr": 1_000_000, "nghìn": 1_000, "k": 1_000}
-        import re
-        nums = re.findall(r"(\d+(?:[.,]\d+)?)\s*(triệu|tr|nghìn|k)?", q)
+        nums = re.findall(r'(\d+(?:[.,]\d+)?)\s*(trieu|tr|nghin|k|million)?', q_norm)
         for num_str, unit in nums:
             try:
-                val = float(num_str.replace(",", "."))
-                multiplier = price_words.get(unit, 1)
+                val = float(num_str.replace(',', '.'))
+                multiplier = {'trieu': 1_000_000, 'tr': 1_000_000,
+                              'nghin': 1_000, 'k': 1_000, 'million': 1_000_000}.get(unit, 1)
                 price_limit = val * multiplier
                 break
             except:
                 pass
 
-        if price_limit and not matched:
-            matched = [p for p in self.products
-                       if float(p.get("price", 0) or 0) <= price_limit]
+        if price_limit:
+            # Lọc sản phẩm dưới mức giá
+            filtered = [p for p in self.products
+                        if float(p.get('price', 0) or 0) <= price_limit]
+            if filtered:
+                matched = filtered
 
-        # Xây dựng câu trả lời
         if matched:
-            lines = [f"🛒 Tôi tìm thấy **{len(matched)} sản phẩm** phù hợp:\n"]
+            lines = [f"🛝 Tôi tìm thấy **{len(matched)} sản phẩm** phù hợp:\n"]
             for p in matched[:5]:
-                name     = p.get("name", "Sản phẩm")
-                price    = p.get("price", "N/A")
-                discount = p.get("discount_percent", 0) or 0
-                stock    = p.get("stock", 0)
+                name     = p.get('name', 'Sản phẩm')
+                price    = p.get('price', 'N/A')
+                discount = p.get('discount_percent', 0) or 0
+                stock    = p.get('stock', 0)
                 line = f"• **{name}** — {price}đ"
                 if discount:
                     line += f" *(Giảm {discount}%)*"
-                if stock <= 5:
+                if stock and int(stock) <= 5:
                     line += " ⚠️ Sắp hết hàng!"
                 lines.append(line)
             if len(matched) > 5:
                 lines.append(f"_(và {len(matched)-5} sản phẩm khác...)_")
             response = "\n".join(lines)
         else:
-            # Gợi ý chung
             response = (
-                "Xin chào! Tôi là trợ lý AI của **Tech Store** 🛍️\n\n"
-                f"Chúng tôi có **{len(self.products)} sản phẩm** đa dạng. "
-                "Bạn có thể hỏi về:\n"
-                "• Laptop, điện thoại, máy tính bảng\n"
-                "• Sản phẩm theo ngân sách (ví dụ: *laptop dưới 15 triệu*)\n"
+                "Xin chào! Tôi là trợ lý AI của **Tech Store** 🛒\n\n"
+                f"Chúng tôi có **{len(self.products)} sản phẩm** đa dạng. Bạn có thể hỏi về:\n"
+                "• Laptop, điện thoại, máy tính bảng, tai nghe...\n"
+                "• Sản phẩm theo ngân sách (VD: *laptop dưới 15 triệu*)\n"
                 "• Sản phẩm đang giảm giá\n"
-                "• Hoặc gõ **đề xuất** để xem gợi ý AI!"
             )
 
         return response + lstm_text
